@@ -12,9 +12,9 @@ if (!isset($_SESSION['Phone'])) {
 $bookFilmController = new BookFilmController();
 
 // Lấy mã phim từ URL
-if(isset($_GET['maPhim']) && isset($_GET['gioChieu'])) {
+$gioChieu = $_GET['gioChieu'];
+if(isset($_GET['maPhim'])) {
     $maPhim = $_GET['maPhim'];
-    $gioChieu = $_GET['gioChieu'];
 
     // Lấy thông tin phim từ controller
     $filmDetails = $bookFilmController->getFilmDetails($maPhim);
@@ -124,40 +124,40 @@ if(isset($_GET['maPhim']) && isset($_GET['gioChieu'])) {
 </head>
 <body>
 <header>
-    <h2>Chọn ghế ngồi</h2>
-</header>
+        <h2>Chọn ghế ngồi</h2>
+    </header>
 
-<!-- Nội dung chính của trang -->
-<section>
-    <!-- Hiển thị hình ảnh của phim -->
-    <img id="imgPhim" src="../asset/images/<?php echo $hinhAnh; ?>" style="padding: 50px; width: 550px; height: 350px;" />
-    <h1>MÀN HÌNH</h1>
-    <!-- Khu vực chứa các ghế ngồi -->
-    <div id="seatingArea">
-        <!-- Các ghế ngồi sẽ được tạo ra bằng JavaScript -->
-    </div>
+    <!-- Nội dung chính của trang -->
+    <section>
+        <!-- Hiển thị hình ảnh của phim -->
+        <img id="imgPhim" src="../asset/images/<?php echo $hinhAnh; ?>" style="padding: 50px; width: 550px; height: 350px;" />
+        <h1>MÀN HÌNH</h1>
+        <!-- Khu vực chứa các ghế ngồi -->
+        <div id="seatingArea">
+            <!-- Các ghế ngồi sẽ được tạo ra bằng JavaScript -->
+        </div>
 
-    <!-- Hiển thị các ghế đã chọn -->
-    <div id="selectedSeats">
-        <?php
-        if (!empty($selectedSeats)) {
-            echo "Các ghế đã chọn: " . implode(", ", $selectedSeats);
-        } else {
-            echo "Chưa có ghế nào được chọn.";
-        }
-        ?>
-    </div>
+        <!-- Hiển thị các ghế đã chọn -->
+        <div id="selectedSeats">
+            <?php
+            if (!empty($selectedSeats)) {
+                echo "Các ghế đã chọn: " . implode(", ", $selectedSeats);
+            } else {
+                echo "Chưa có ghế nào được chọn.";
+            }
+            ?>
+        </div>
 
-    <!-- Nút thanh toán -->
-    <div style="margin-top: 20px; text-align: center;">
-        <input type="button" value="Thanh toán" class="custom-button" onclick="BillFilm();" />
-    </div>
-</section>
+        <!-- Nút thanh toán -->
+        <div style="margin-top: 20px; text-align: center;">
+            <input type="button" value="Thanh toán" class="custom-button" onclick="BillFilm();" />
+        </div>
+    </section>
 
-<?php include 'footer.php'; ?>
-<br/><br/><br/><br/>
-<!-- JavaScript -->
-<script>
+    <?php include 'footer.php'; ?>
+            <br/><br/><br/><br/>
+    <!-- JavaScript -->
+    <script>
     // Khai báo biến JavaScript
     var selectedSeats = [];
 
@@ -190,55 +190,47 @@ if(isset($_GET['maPhim']) && isset($_GET['gioChieu'])) {
     }
 
     // Hàm chuyển đổi trạng thái chọn ghế
-function toggleSeatSelection(seat) {
-    var seatNumber = seat.getAttribute("data-seat");
+    function toggleSeatSelection(seat) {
+        var seatNumber = seat.getAttribute("data-seat");
 
-    // Kiểm tra xem ghế đã được chọn hay không
-    if (selectedSeats.includes(seatNumber)) {
-        // Nếu ghế đã chọn, hủy chọn
-        selectedSeats = selectedSeats.filter(function (item) {
-            return item !== seatNumber;
-        });
-        seat.classList.remove("selected");
+        if (selectedSeats.includes(seatNumber)) {
+            // Nếu ghế đã chọn, hủy chọn
+            selectedSeats = selectedSeats.filter(function (item) {
+                return item !== seatNumber;
+            });
+            seat.classList.remove("selected");
+        } else {
+            // Nếu ghế chưa chọn, chọn ghế
+            selectedSeats.push(seatNumber);
+            seat.classList.add("selected");
+        }
+    }
+
+    // Hàm chuyển hướng đến trang chi tiết phim
+    function BillFilm(maPhim, gioChieu) {
+    // Kiểm tra nếu có ghế được chọn thì chuyển hướng
+    if (selectedSeats.length > 0) {
+        // Chuyển hướng đến trang chi tiết phim với mã phim, giờ chiếu và danh sách ghế đã chọn
+        var selectedSeatsString = selectedSeats.join(",");
+        window.location.href = "hoaDon.php?maPhim=<?php echo $maPhim; ?>&gioChieu=<?php echo $gioChieu; ?>&selectedSeats=" + selectedSeatsString;
     } else {
-        // Nếu ghế chưa chọn, kiểm tra trạng thái của ghế từ cơ sở dữ liệu
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", "kiemTraGhe.php?seat=" + seatNumber, true);
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                var response = xhr.responseText;
-                if (response === "Trống") {
-                    // Ghế có thể chọn
-                    selectedSeats.push(seatNumber);
-                    seat.classList.add("selected");
-                } else if (response === "Đã đặt") {
-                    // Ghế đã được đặt, chặn việc chọn và thay đổi màu sắc
-                    seat.disabled = true;
-                    seat.style.backgroundColor = "red"; // Thay đổi màu sắc thành đỏ
-                } else {
-                    // Xử lý trạng thái khác (nếu cần)
-                }
-            }
-        };
-        xhr.send();
+        alert("Vui lòng chọn ghế trước khi tiếp tục.");
     }
 }
 
 
-    // Hàm chuyển hướng đến trang chi tiết phim
-    function BillFilm() {
-        // Kiểm tra nếu có ghế được chọn thì chuyển hướng
-        if (selectedSeats.length > 0) 
-        {
-            // Chuyển hướng đến trang chi tiết phim với mã phim và danh sách ghế đã chọn
-            var selectedSeatsString = selectedSeats.join(",");
-            window.location.href = "hoaDon.php?maPhim=<?php echo $maPhim; ?>&gioChieu=<?php echo $gioChieu; ?>&selectedSeats=" + selectedSeatsString;
-        } 
-        else 
-        {
-            alert("Vui lòng chọn ghế trước khi tiếp tục.");
-        }
+    // Kiểm tra nếu có ghế được chọn thì chuyển hướng
+    if (selectedSeats.length > 0) 
+    {
+        // Chuyển hướng đến trang chi tiết phim với mã phim và danh sách ghế đã chọn
+        var selectedSeatsString = selectedSeats.join(",");
+        window.location.href = "hoaDon.php?maPhim=<?php echo $maPhim; ?>&gioChieu=" + gioChieu; + "&selectedSeats=" + selectedSeatsString;
+    } 
+    else 
+    {
+        alert("Vui lòng chọn ghế trước khi tiếp tục.");
     }
+
 
     // Gọi hàm tạo ghế ngồi khi trang được tải
     window.onload = function() {
