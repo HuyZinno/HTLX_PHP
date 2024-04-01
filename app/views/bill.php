@@ -30,12 +30,8 @@ if (isset($_GET['maPhim']) && isset($_GET['gioChieu']) && isset($_GET['selectedS
     if ($row) {
         $magiochieu = $row['magiochieu'];
 
-        // Lấy ID từ session Phone
+        // Lấy số điện thoại từ session
         $Phone = $_SESSION['Phone'];
-        $query = "SELECT ID FROM users WHERE Phone = '$Phone'";
-        $result = mysqli_query($conn, $query);
-        $row = mysqli_fetch_assoc($result);
-        $ID = $row['ID'];
 
         // Tạo hóa đơn cho mỗi ghế đã chọn
         foreach ($selectedSeats as $seat) {
@@ -43,8 +39,8 @@ if (isset($_GET['maPhim']) && isset($_GET['gioChieu']) && isset($_GET['selectedS
             $tongtien = 50000;
 
             // Insert dữ liệu vào bảng bill
-            $insert_query = "INSERT INTO bill (maBill, tongtien, ID, maphim, tenghe, magiochieu) 
-                            VALUES (NULL, '$tongtien', '$ID', '$maPhim', '$seat', '$magiochieu')";
+            $insert_query = "INSERT INTO bill (Phone, maphim, tenghe, magiochieu, tongtien) 
+                            VALUES ('$Phone', '$maPhim', '$seat', '$magiochieu', '$tongtien')";
             if (mysqli_query($conn, $insert_query)) {
                 echo "Hóa đơn cho ghế $seat đã được lưu thành công!<br>";
             } else {

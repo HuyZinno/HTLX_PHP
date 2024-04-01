@@ -142,8 +142,6 @@ if(isset($_GET['maPhim'])) {
             <?php
             if (!empty($selectedSeats)) {
                 echo "Các ghế đã chọn: " . implode(", ", $selectedSeats);
-            } else {
-                echo "Chưa có ghế nào được chọn.";
             }
             ?>
         </div>
@@ -217,21 +215,6 @@ if(isset($_GET['maPhim'])) {
         alert("Vui lòng chọn ghế trước khi tiếp tục.");
     }
 }
-
-
-    // Kiểm tra nếu có ghế được chọn thì chuyển hướng
-    if (selectedSeats.length > 0) 
-    {
-        // Chuyển hướng đến trang chi tiết phim với mã phim và danh sách ghế đã chọn
-        var selectedSeatsString = selectedSeats.join(",");
-        window.location.href = "hoaDon.php?maPhim=<?php echo $maPhim; ?>&gioChieu=" + gioChieu; + "&selectedSeats=" + selectedSeatsString;
-    } 
-    else 
-    {
-        alert("Vui lòng chọn ghế trước khi tiếp tục.");
-    }
-
-
     // Gọi hàm tạo ghế ngồi khi trang được tải
     window.onload = function() {
         createSeatingArea();
