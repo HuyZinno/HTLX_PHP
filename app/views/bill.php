@@ -1,12 +1,10 @@
 <?php
-// Khởi tạo phiên làm việc
 session_start();
 
-// Kiểm tra xem người dùng đã đăng nhập chưa
+// Kiểm tra đăng nhập
 if (!isset($_SESSION['Phone'])) {
-    // Nếu chưa, chuyển hướng về trang đăng nhập
     header("Location: login.php");
-    exit(); // Dừng việc thực hiện mã PHP tiếp theo
+    exit();
 }
 
 // Kết nối đến cơ sở dữ liệu
@@ -15,7 +13,7 @@ if (!$conn) {
     die("Kết nối đến cơ sở dữ liệu thất bại: " . mysqli_connect_error());
 }
 
-// Kiểm tra xem các tham số được truyền từ URL hay không
+// Kiểm tra các tham số từ URL
 if (isset($_GET['maPhim']) && isset($_GET['gioChieu']) && isset($_GET['selectedSeats'])) {
     $maPhim = $_GET['maPhim'];
     $gioChieu = $_GET['gioChieu'];
@@ -26,26 +24,29 @@ if (isset($_GET['maPhim']) && isset($_GET['gioChieu']) && isset($_GET['selectedS
     $result = mysqli_query($conn, $query);
     $row = mysqli_fetch_assoc($result);
 
-    // Kiểm tra xem thông tin giờ chiếu có tồn tại hay không
     if ($row) {
         $magiochieu = $row['magiochieu'];
-
-        // Lấy số điện thoại từ session
         $Phone = $_SESSION['Phone'];
 
-        // Tạo hóa đơn cho mỗi ghế đã chọn
-        foreach ($selectedSeats as $seat) {
-            // Tính tổng tiền cho mỗi ghế (giả sử giá vé là 50.000 đồng)
-            $tongtien = 50000;
+        // Tính tổng tiền
+        $tongtien = count($selectedSeats) * 50000; // Giả sử giá vé là 50,000 VND
 
-            // Insert dữ liệu vào bảng bill
-            $insert_query = "INSERT INTO bill (Phone, maphim, tenghe, magiochieu, tongtien) 
-                            VALUES ('$Phone', '$maPhim', '$seat', '$magiochieu', '$tongtien')";
-            if (mysqli_query($conn, $insert_query)) {
-                echo "Hóa đơn cho ghế $seat đã được lưu thành công!<br>";
-            } else {
-                echo "Lỗi khi lưu hóa đơn cho ghế $seat: " . mysqli_error($conn) . "<br>";
+        // Tạo hóa đơn
+        $insert_bill_query = "INSERT INTO bill (Phone, maPhim, magiochieu, tongtien) VALUES ('$Phone', '$maPhim', '$magiochieu', '$tongtien')";
+        if (mysqli_query($conn, $insert_bill_query)) {
+            $maBill = mysqli_insert_id($conn);
+
+            // Thêm dữ liệu ghế vào bảng ghe với maBill
+            foreach ($selectedSeats as $seat) {
+                $insert_ghe_query = "INSERT INTO ghe (tenGhe, trangThai, maBill) VALUES ('$seat', 'Đã đặt', '$maBill')";
+                if (mysqli_query($conn, $insert_ghe_query)) {
+                    echo "Ghế $seat đã được đặt thành công!<br>";
+                } else {
+                    echo "Lỗi khi đặt ghế $seat: " . mysqli_error($conn) . "<br>";
+                }
             }
+        } else {
+            echo "Lỗi khi tạo hóa đơn: " . mysqli_error($conn);
         }
     } else {
         echo "Lỗi: Không tìm thấy thông tin giờ chiếu. Vui lòng kiểm tra lại hoặc liên hệ hỗ trợ.";
@@ -54,6 +55,5 @@ if (isset($_GET['maPhim']) && isset($_GET['gioChieu']) && isset($_GET['selectedS
     echo "Lỗi: Thông tin không hợp lệ. Vui lòng kiểm tra lại hoặc liên hệ hỗ trợ.";
 }
 
-// Đóng kết nối cơ sở dữ liệu
 mysqli_close($conn);
 ?>

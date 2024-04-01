@@ -1,5 +1,7 @@
 <?php
 include_once '../controllers/BookFilmController.php';
+
+// Khởi tạo phiên làm việc
 session_start();
 
 // Kiểm tra xem người dùng đã đăng nhập chưa
@@ -9,24 +11,51 @@ if (!isset($_SESSION['Phone'])) {
     exit(); // Dừng việc thực hiện mã PHP tiếp theo
 }
 
+// Tạo đối tượng BookFilmController
 $bookFilmController = new BookFilmController();
 
 // Lấy mã phim từ URL
-$gioChieu = $_GET['gioChieu'];
-if(isset($_GET['maPhim'])) {
+if(isset($_GET['maPhim']) && isset($_GET['gioChieu'])) {
     $maPhim = $_GET['maPhim'];
+    $gioChieu = $_GET['gioChieu'];
 
     // Lấy thông tin phim từ controller
     $filmDetails = $bookFilmController->getFilmDetails($maPhim);
 
     // Kiểm tra nếu thông tin phim tồn tại
-    if ($filmDetails) {
-        $hinhAnh = $filmDetails['hinhAnh'];
-    } else {
+    if (!$filmDetails) {
         echo "Không tìm thấy thông tin phim.";
         exit(); // Kết thúc kịch bản nếu không tìm thấy thông tin phim
     }
+    $hinhAnh = $filmDetails['hinhAnh'];
+} else {
+    echo "Lỗi: Thông tin không hợp lệ. Vui lòng kiểm tra lại hoặc liên hệ hỗ trợ.";
+    exit();
 }
+
+// Kết nối đến cơ sở dữ liệu
+$conn = mysqli_connect('localhost', 'root', '', 'htlx');
+
+// Kiểm tra kết nối
+if (!$conn) {
+    die("Kết nối đến cơ sở dữ liệu thất bại: " . mysqli_connect_error());
+}
+
+// Truy vấn để lấy danh sách các ghế đã đặt cho phim có mã phim và giờ chiếu tương ứng
+$query = "SELECT tenGhe FROM ghe WHERE maBill IN (SELECT maBill FROM bill WHERE maPhim = '$maPhim' AND magiochieu IN (SELECT magiochieu FROM thoigian WHERE maPhim = '$maPhim' AND gioChieu = '$gioChieu'))";
+$result = mysqli_query($conn, $query);
+
+// Mảng để lưu trữ danh sách các ghế đã đặt
+$bookedSeats = array();
+
+// Duyệt qua kết quả và lấy danh sách các ghế đã đặt
+while ($row = mysqli_fetch_assoc($result)) {
+    $bookedSeats[] = $row['tenGhe'];
+}
+
+// Chuyển đổi mảng PHP sang chuỗi JSON để sử dụng trong mã JavaScript
+$bookedSeatsJSON = json_encode($bookedSeats);
+
 ?>
 
 <!DOCTYPE html>
@@ -120,6 +149,11 @@ if(isset($_GET['maPhim'])) {
             background-color: #28a745; /* Màu ghế đã chọn */
             color: #fff; /* Màu chữ */
         }
+
+        .seat.booked {
+            background-color: yellow; /* Màu ghế đã đặt */
+            cursor: not-allowed; /* Không thể chọn */
+        }
     </style>
 </head>
 <body>
@@ -151,9 +185,9 @@ if(isset($_GET['maPhim'])) {
             <input type="button" value="Thanh toán" class="custom-button" onclick="BillFilm();" />
         </div>
     </section>
-
+    <br/><br/><br/><br/>
     <?php include 'footer.php'; ?>
-            <br/><br/><br/><br/>
+            
     <!-- JavaScript -->
     <script>
     // Khai báo biến JavaScript
@@ -174,17 +208,31 @@ if(isset($_GET['maPhim'])) {
             for (var seatNum = 1; seatNum <= seatsPerRow; seatNum++) {
                 var seat = document.createElement("div");
                 seat.className = "seat";
-                seat.textContent = String.fromCharCode(64 + row) + seatNum; // Mã ghế: A1, A2, ..., B1, B2, ...
-                seat.setAttribute("data-seat", String.fromCharCode(64 + row) + seatNum); // Đặt thuộc tính data cho ghế
-                seat.onclick = function () {
-                    toggleSeatSelection(this);
-                };
+
+                // Set thuộc tính data cho ghế
+                var seatCode = String.fromCharCode(64 + row) + seatNum;
+                seat.textContent = seatCode; // Mã ghế
+                seat.setAttribute("data-seat", seatCode);
+
+                // Kiểm tra nếu ghế đã đặt, thêm class booked
+                if (checkSeatBooked(seatCode)) {
+                    seat.classList.add("booked");
+                } else {
+                    seat.onclick = function () {
+                        toggleSeatSelection(this);
+                    };
+                }
 
                 rowElement.appendChild(seat);
             }
 
             seatingArea.appendChild(rowElement);
         }
+    }
+
+    // Hàm kiểm tra ghế đã đặt
+    function checkSeatBooked(seatNumber) {
+        return <?php echo $bookedSeatsJSON; ?>.includes(seatNumber);
     }
 
     // Hàm chuyển đổi trạng thái chọn ghế
@@ -205,16 +253,17 @@ if(isset($_GET['maPhim'])) {
     }
 
     // Hàm chuyển hướng đến trang chi tiết phim
-    function BillFilm(maPhim, gioChieu) {
-    // Kiểm tra nếu có ghế được chọn thì chuyển hướng
-    if (selectedSeats.length > 0) {
-        // Chuyển hướng đến trang chi tiết phim với mã phim, giờ chiếu và danh sách ghế đã chọn
-        var selectedSeatsString = selectedSeats.join(",");
-        window.location.href = "hoaDon.php?maPhim=<?php echo $maPhim; ?>&gioChieu=<?php echo $gioChieu; ?>&selectedSeats=" + selectedSeatsString;
-    } else {
-        alert("Vui lòng chọn ghế trước khi tiếp tục.");
+    function BillFilm() {
+        // Kiểm tra nếu có ghế được chọn thì chuyển hướng
+        if (selectedSeats.length > 0) {
+            // Chuyển hướng đến trang chi tiết phim với mã phim, giờ chiếu và danh sách ghế đã chọn
+            var selectedSeatsString = selectedSeats.join(",");
+            window.location.href = "hoaDon.php?maPhim=<?php echo $maPhim; ?>&gioChieu=<?php echo $gioChieu; ?>&selectedSeats=" + selectedSeatsString;
+        } else {
+            alert("Vui lòng chọn ghế trước khi tiếp tục.");
+        }
     }
-}
+
     // Gọi hàm tạo ghế ngồi khi trang được tải
     window.onload = function() {
         createSeatingArea();
