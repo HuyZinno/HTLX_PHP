@@ -1,9 +1,20 @@
+<?php
+// Khởi tạo phiên làm việc
+session_start();
+
+// Kiểm tra xem người dùng đã đăng nhập chưa
+if (!isset($_SESSION['Phone'])) {
+    // Nếu chưa, chuyển hướng về trang đăng nhập
+    header("Location: login.php");
+    exit(); // Dừng việc thực hiện mã PHP tiếp theo
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thanh toán</title>
+    <title>Chi tiết vé phim</title>
     <style>
         /* CSS cho định dạng hóa đơn */
         body {
@@ -106,15 +117,14 @@
         }
 
         .btn-payment {
-            background-color: hotpink;
-            color: black;
+            background-color: #007bff;
+            color: white;
             border: none;
             padding: 10px 20px;
             border-radius: 5px;
             font-size: 16px;
             cursor: pointer;
             margin-top: 20px; /* Khoảng cách từ nút button đến phần trên */
-            margin-right: 10px;
         }
 
         .btn-back {
@@ -137,7 +147,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>THANH TOÁN</h1>
+            <h1>CHI TIẾT VÉ PHIM</h1>
         </div>
         <div class="content">
             <?php
@@ -147,20 +157,25 @@
                 die("Kết nối đến cơ sở dữ liệu thất bại: " . mysqli_connect_error());
             }
 
-            // Lấy dữ liệu từ URL
-            $maPhim = $_GET['maPhim'];
-            $gioChieu = $_GET['gioChieu'];
-            $selectedSeats = explode(',', $_GET['selectedSeats']);
+            // Lấy mã hóa đơn từ URL
+            $maBill = $_GET['maBill'];
 
-            // Truy vấn để lấy thông tin phim từ bảng movie
-            $query = "SELECT hinhAnh, tenPhim FROM movie WHERE maPhim = '$maPhim'";
+            // Truy vấn để lấy thông tin từ bảng bill và movie
+            $query = "SELECT m.hinhAnh, m.tenPhim, t.gioChieu, GROUP_CONCAT(g.tenGhe SEPARATOR ', ') AS tenGhe
+                      FROM bill b
+                      INNER JOIN movie m ON b.maPhim = m.maPhim
+                      INNER JOIN thoigian t ON b.magiochieu = t.maGioChieu
+                      INNER JOIN ghe g ON b.maBill = g.maBill
+                      WHERE b.maBill = '$maBill'";
             $result = mysqli_query($conn, $query);
             if ($result) {
                 $row = mysqli_fetch_assoc($result);
                 $hinhAnh = $row['hinhAnh'];
                 $tenPhim = $row['tenPhim'];
+                $gioChieu = $row['gioChieu'];
+                $tenGhe = $row['tenGhe'];
 
-                // Hiển thị thông tin phim và vé đã chọn
+                // Hiển thị thông tin hóa đơn
                 echo "<div class='movie-info'>";
                 echo "<img id='imgPhim' src='../asset/images/$hinhAnh' />";
                 echo "<div class='movie-details'>";
@@ -170,42 +185,15 @@
                 echo "<div class='selected-seats'>";
                 echo "<h3 class='selected-seats-title'>Ghế Đã Chọn:</h3>";
                 echo "<ul class='seat-list'>";
-                foreach ($selectedSeats as $tenGhe) {
-                    echo "<li class='seat'>$tenGhe</li>";
-                }
+                echo "<li class='seat'>$tenGhe</li>";
                 echo "</ul></div>";
 
-                // Tính tổng tiền
-                $tongTien = count($selectedSeats) * 50000; // Giả sử giá vé là 50.000 đồng
-                echo "<div class='total-price'>Tổng tiền: $tongTien VNĐ</div>";
-
-                // Hiển thị nút thanh toán và quay lại
-                // Hiển thị nút thanh toán và quay lại
+                // Hiển thị nút quay lại
                 echo "<div style='text-align: center;'>";
-                echo "<form class='form-payment' method='POST' target='_blank' enctype='application/x-www-form-urlencoded' action='xuLyMomoQR.php'>";
-                echo "<input type='hidden' name='maPhim' value='$maPhim'>";
-                echo "<input type='hidden' name='gioChieu' value='$gioChieu'>";
-                $selectedSeatsString = implode(',', $selectedSeats);
-                echo "<input type='hidden' name='selectedSeats' value='$selectedSeatsString'>";
-
-                echo "<input type='hidden' name='tongTien' value='$tongTien'>"; // Thêm input hidden chứa giá trị tổng tiền
-                echo "<input type='submit' name='momo' value='Thanh toán QR Code Momo' class='btn-payment'>";
-                echo "</form>";
-                echo "<form class='form-payment' method='POST' target='_blank' enctype='application/x-www-form-urlencoded' action='xuLyMomoATM.php'>";
-                echo "<input type='hidden' name='maPhim' value='$maPhim'>";
-                echo "<input type='hidden' name='gioChieu' value='$gioChieu'>";
-                $selectedSeatsString = implode(',', $selectedSeats);
-                echo "<input type='hidden' name='selectedSeats' value='$selectedSeatsString'>";
-                echo "<input type='hidden' name='tongTien' value='$tongTien'>"; // Thêm input hidden chứa giá trị tổng tiền
-                echo "<input type='submit' name='momo' value='Thanh toán qua Momo ATM' class='btn-payment'>";
-                echo "</form>";
-                echo "<button class='btn-payment' onclick='payment()'>Thanh toán tại quầy</button>";
                 echo "<button class='btn-back' onclick='goBack()'>Quay lại</button>";
                 echo "</div>";
-                
-
             } else {
-                echo "Lỗi: Không tìm thấy thông tin phim. Vui lòng kiểm tra lại hoặc liên hệ hỗ trợ.";
+                echo "Lỗi: Không tìm thấy thông tin hóa đơn. Vui lòng kiểm tra lại hoặc liên hệ hỗ trợ.";
             }
 
             // Đóng kết nối cơ sở dữ liệu
@@ -213,17 +201,6 @@
             ?>
 
             <script>
-                // Hàm chuyển hướng đến trang thanh toán
-                function payment() {
-                    // Lấy thông tin từ URL
-                    var maPhim = "<?php echo $maPhim; ?>";
-                    var gioChieu = "<?php echo $gioChieu; ?>";
-                    var selectedSeatsString = "<?php echo implode(',', $selectedSeats); ?>";
-
-                    // Chuyển hướng đến trang thanh toán
-                    window.location.href = "Bill.php?maPhim=" + maPhim + "&gioChieu=" + gioChieu + "&selectedSeats=" + selectedSeatsString;
-                }
-
                 // Hàm quay lại trang trước đó
                 function goBack() {
                     window.history.back();

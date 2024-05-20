@@ -12,6 +12,7 @@ if (isset($_GET['logout'])) {
     header("Location: login.php");
     exit;
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">

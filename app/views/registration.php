@@ -1,8 +1,27 @@
 <?php
-session_start();
+include_once '../controllers/UserController.php';
 include_once '../config/Database.php';
-include_once '../controllers/LoginController.php';
 
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Lấy dữ liệu từ form
+    $phone = $_POST['txtPhone'];
+    $username = $_POST['txtPhone'];
+    $password = $_POST['txtPassword'];
+    $fullname = $_POST['txtfullname'];
+    $email = $_POST['txtEmail'];
+    $city = $_POST['txtCity'];
+
+    // Khởi tạo một đối tượng Database để tạo kết nối CSDL
+    $database = new Database();
+    $conn = $database->getConnection();
+
+    // Khởi tạo một đối tượng UserController và truyền kết nối CSDL vào constructor
+    $userController = new UserController($conn);
+
+    // Gọi phương thức addUser từ UserController để thêm người dùng mới
+    $userController->DangKy($phone, $password, $fullname, $email, $city);
+
+}
 ?>
 
 <!DOCTYPE html>
@@ -20,12 +39,14 @@ include_once '../controllers/LoginController.php';
             background-repeat: no-repeat;
         }
         .login-container {
-            background-color: #f0f0f0;
+            background-image: url('../asset/images/nen2.jpg'); 
+            background-repeat: no-repeat;
+            /* background-color: #f0f0f0; */
             padding: 20px;
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
             width: 400px;
-            height: 520px;
+            height: 620px;
         }
         .login-container h2 {
             text-align: center;
@@ -82,8 +103,8 @@ include_once '../controllers/LoginController.php';
     </style>
 </head>
 <body>
-    <div class="login-container" style="background-image: url('../asset/images/nen2.jpg'); background-repeat: no-repeat">
-        <form id="form1" action="<?php echo $_SERVER['PHP_SELF']; ?>" method="POST" runat="server" style="font-family: 'SVN-Agency FB'; font-weight: bold; font-size: medium; height: 555px;">
+    <div class="login-container">
+        <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" runat="server" style="font-family: 'SVN-Agency FB'; font-weight: bold; font-size: medium; height: 555px;">
         <h2 style="font-family: 'SVN-New Athletic M54'; font-weight: normal;">
             <label for="password">
             <a href="home.php">
@@ -91,18 +112,23 @@ include_once '../controllers/LoginController.php';
             </a>
 
             </label>
-            ĐĂNG NHẬP VÀO HỆ THỐNG</h2>
-            <label for="sdt" style="font-family: 'SVN-New Athletic M54'; font-weight: lighter">Số điện thoại:<input type="text" id="txtPhone" name="txtPhone" class="center-textbox"></label>
-            &nbsp; 
+            ĐĂNG KÝ TÀI KHOẢN</h2>
+            <label for="phone" style="font-family: 'SVN-New Athletic M54'; font-weight: lighter">Số điện thoại:<input type="text" id="txtPhone" name="txtPhone" class="center-textbox"></label>
+         
             <label for="password" style="font-family: 'SVN-New Athletic M54'; font-weight: lighter">Mật khẩu:<input type="password" id="txtPassword" name="txtPassword" class="center-textbox"></label>
-            &nbsp;         
+         
+            <label for="fullname" style="font-family: 'SVN-New Athletic M54'; font-weight: lighter">Họ và tên:<input type="text" id="txtfullname" name="txtfullname" class="center-textbox"></label>
+
+            <label for="email" style="font-family: 'SVN-New Athletic M54'; font-weight: lighter">Email:<input type="text" id="txtEmail" name="txtEmail" class="center-textbox"></label>
+
+            <label for="city" style="font-family: 'SVN-New Athletic M54'; font-weight: lighter">Nơi ở:<input type="text" id="txtCity" name="txtCity" class="center-textbox"></label>
 
             <div class="login-button">
-                <input type="submit" id="btnLogin" name="btnLogin" value="Đăng nhập" class="login-button" />
+                <input type="submit" id="btnDK" name="btnLogin" value="Đăng ký" class="login-button" />
             </div>
            <br />
                 <br />
-                <a href="#">Quên mật khẩu</a> hoặc <a href="Registration.php">Đăng ký</a>
+                <a href="login.php">Quay lại đăng nhập?</a>
                 <br /><br />
         </form>
     </div>

@@ -40,10 +40,9 @@
 
     <nav>
         <ul>
-            <li><a href="home.php">Trang Chủ</a></li>
-            <li><a href="phimDangChieu.php">Phim Đang Chiếu</a></li>
-            <li><a href="contact.php">Liên Hệ</a></li>
-            <li><a href="history.php">Lịch sử mua</a></li>
+            <li><a href="homeAdmin.php">Trang Chủ</a></li>
+            <li><a href="listFilm.php">Danh sách phim</a></li>
+            <li><a href="phanHoi.php">Phản hồi khách hàng</a></li>
         </ul>
     </nav>
 

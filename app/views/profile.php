@@ -25,12 +25,12 @@ if ($result->num_rows > 0) {
     $row = $result->fetch_assoc();
     $FullName = $row['FullName'];
     $Email = $row['Email'];
-    $Address = $row['Address'];
+    $City = $row['City'];
 } else {
     // Xử lý khi không tìm thấy thông tin người dùng
     $FullName = '';
     $Email = '';
-    $Address = '';
+    $City = '';
 }
 
 // URL của ảnh đại diện có thể được lấy từ CSDL hoặc từ thông tin người dùng
@@ -46,10 +46,11 @@ $profilePictureURL = 'https://static-00.iconduck.com/assets.00/user-icon-2048x20
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         body {
+            
             font-family: "Exo", sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f2f2f2;
+            background-image: url('../asset/images/background.jpg');
         }
 
         .container {
@@ -148,9 +149,9 @@ $profilePictureURL = 'https://static-00.iconduck.com/assets.00/user-icon-2048x20
 
     <div class="profile-info">
         <p><i class="fas fa-user"></i>  <?php echo $FullName; ?></p>
-        <p><i class="fas fa-envelope"></i>  <?php echo $Email; ?></p>
+        <p><i class="fas fa-envelope"></i> <?php echo $Email; ?></p>
         <p><i class="fas fa-phone"></i>  <?php echo $Phone; ?></p>
-        <p><i class="fas fa-city"></i>  <?php echo $Address; ?></p>
+        <p><i class="fas fa-city"></i>  <?php echo $City; ?></p>
 
     </div>
     <div class="profile-links">

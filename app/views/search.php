@@ -6,6 +6,7 @@
     <title>Kết quả tìm kiếm cho <?php echo isset($_POST['search_text']) ? $_POST['search_text'] : ''; ?></title>
     <link rel="stylesheet" href="content/site.css">
     <style>
+        /* Paste your CSS styles here */
         body {
             font-family: "Exo", sans-serif;
             color: #333;
@@ -19,8 +20,6 @@
 
         h2 {
             margin-bottom: 20px;
-            color: white; /* Thiết lập màu chữ trắng */
-            text-align: center; /* Căn giữa nội dung */
         }
 
         ul {
@@ -47,11 +46,13 @@
 
         img {
             border-radius: 5px;
-            max-width: 400px; /* Đảm bảo rằng chiều rộng của hình ảnh không vượt quá kích thước của phần tử chứa */
-            max-height: 400px; /* Đảm bảo rằng chiều cao của hình ảnh không vượt quá kích thước của phần tử chứa */
+            max-width: 500px; /* Đảm bảo rằng chiều rộng của hình ảnh không vượt quá kích thước của phần tử chứa */
+            max-height: 300px; /* Đảm bảo rằng chiều cao của hình ảnh không vượt quá kích thước của phần tử chứa */
             width: auto;
             height: auto;
             margin-right: 20px;
+            margin-top: 10px;
+            object-fit: cover; /* Đảm bảo hình ảnh không bị vỡ hoặc bị kéo ra */
         }
 
         .movie-info {
@@ -136,5 +137,7 @@
             window.location.href = "chiTietPhim.php?maPhim=" + maPhim;
         }
     </script>
+    <br/><br/><br/><br/>
+    <?php include 'footer.php'; ?>
 </body>
 </html>
